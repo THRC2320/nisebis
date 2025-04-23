@@ -1,0 +1,112 @@
+{
+  "audio_data": [
+    {
+      "title": "始発放送",
+      "audio_url": "kosa/00.mp3",
+      "lat": 34.716131,
+      "lon": 135.253986
+    },
+    {
+      "title": "三郷発車時",
+      "audio_url": "kosa/01.mp3",
+      "lat": 34.717508,
+      "lon": 135.255853
+    },
+    {
+      "title": "2",
+      "audio_url": "kosa/02.mp3",
+      "lat": 34.717736,
+      "lon": 135.258130
+    },
+    {
+      "title": "3",
+      "audio_url": "kosa/03.mp3",
+      "lat": 34.718382,
+      "lon": 135.261365
+    },
+    {
+      "title": "3到着",
+      "audio_url": "kosa/03-1.mp3",
+      "lat": 34.719861,
+      "lon": 135.265482
+    },
+    {
+      "title": "4",
+      "audio_url": "kosa/04.mp3",
+      "lat": 34.719834,
+      "lon": 135.265489
+    },
+    {
+      "title": "5",
+      "audio_url": "kosa/05.mp3",
+      "lat": 34.721122,
+      "lon": 135.268693
+    },
+    {
+      "title": "6",
+      "audio_url": "kosa/06.mp3",
+      "lat": 34.721866,
+      "lon": 135.271399
+    },
+    {
+      "title": "7",
+      "audio_url": "kosa/07.mp3",
+      "lat": 34.723167,
+      "lon": 135.276132
+    },
+    {
+      "title": "7到着",
+      "audio_url": "kosa/07-1.mp3",
+      "lat": 34.724949,
+      "lon": 135.281712
+    },
+    {
+      "title": "8",
+      "audio_url": "kosa/08.mp3",
+      "lat": 34.726223,
+      "lon": 135.285671
+    },
+    {
+      "title": "8到着",
+      "audio_url": "kosa/08-1.mp3",
+      "lat": 34.727277,
+      "lon": 135.288956
+    },
+    {
+      "title": "9",
+      "audio_url": "kosa/09.mp3",
+      "lat": 34.729109,
+      "lon": 135.294665
+    },
+    {
+      "title": "10",
+      "audio_url": "kosa/10.mp3",
+      "lat": 34.730248,
+      "lon": 135.298208
+    },
+    {
+      "title": "11",
+      "audio_url": "kosa/11.mp3",
+      "lat": 34.731819,
+      "lon": 135.303579
+    },
+    {
+      "title": "12",
+      "audio_url": "kosa/12.mp3",
+      "lat": 34.307323,
+      "lon": 135.307323
+    },
+    {
+      "title": "13",
+      "audio_url": "kosa/13.mp3",
+      "lat": 34.733537,
+      "lon": 135.312136
+    }
+  ],
+  "soundEffects": [
+    {
+      "label": "ドア開閉",
+      "audio_url": "kosa/door_all_close_test.wav"
+    }
+  ]
+}
