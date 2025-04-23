@@ -1,195 +1,112 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>GPS車内放送</title>
-  <style>
-    .spoiler-button {
-      cursor: pointer;
-      color: blue;
-      text-decoration: underline;
+{
+  "audio_data": [
+    {
+      "title": "始発放送",
+      "audio_url": "kosa/00.mp3",
+      "lat": 34.716131,
+      "lon": 135.253986
+    },
+    {
+      "title": "三郷発車時",
+      "audio_url": "kosa/01.mp3",
+      "lat": 34.717508,
+      "lon": 135.255853
+    },
+    {
+      "title": "2",
+      "audio_url": "kosa/02.mp3",
+      "lat": 34.717736,
+      "lon": 135.258130
+    },
+    {
+      "title": "3",
+      "audio_url": "kosa/03.mp3",
+      "lat": 34.718382,
+      "lon": 135.261365
+    },
+    {
+      "title": "3到着",
+      "audio_url": "kosa/03-1.mp3",
+      "lat": 34.719861,
+      "lon": 135.265482
+    },
+    {
+      "title": "4",
+      "audio_url": "kosa/04.mp3",
+      "lat": 34.719834,
+      "lon": 135.265489
+    },
+    {
+      "title": "5",
+      "audio_url": "kosa/05.mp3",
+      "lat": 34.721122,
+      "lon": 135.268693
+    },
+    {
+      "title": "6",
+      "audio_url": "kosa/06.mp3",
+      "lat": 34.721866,
+      "lon": 135.271399
+    },
+    {
+      "title": "7",
+      "audio_url": "kosa/07.mp3",
+      "lat": 34.723167,
+      "lon": 135.276132
+    },
+    {
+      "title": "7到着",
+      "audio_url": "kosa/07-1.mp3",
+      "lat": 34.724949,
+      "lon": 135.281712
+    },
+    {
+      "title": "8",
+      "audio_url": "kosa/08.mp3",
+      "lat": 34.726223,
+      "lon": 135.285671
+    },
+    {
+      "title": "8到着",
+      "audio_url": "kosa/08-1.mp3",
+      "lat": 34.727277,
+      "lon": 135.288956
+    },
+    {
+      "title": "9",
+      "audio_url": "kosa/09.mp3",
+      "lat": 34.729109,
+      "lon": 135.294665
+    },
+    {
+      "title": "10",
+      "audio_url": "kosa/10.mp3",
+      "lat": 34.730248,
+      "lon": 135.298208
+    },
+    {
+      "title": "11",
+      "audio_url": "kosa/11.mp3",
+      "lat": 34.731819,
+      "lon": 135.303579
+    },
+    {
+      "title": "12",
+      "audio_url": "kosa/12.mp3",
+      "lat": 34.307323,
+      "lon": 135.307323
+    },
+    {
+      "title": "13",
+      "audio_url": "kosa/13.mp3",
+      "lat": 34.733537,
+      "lon": 135.312136
     }
-    .spoiler-content {
-      display: none;
+  ],
+  "soundEffects": [
+    {
+      "label": "ドア開閉",
+      "audio_url": "kosa/door_all_close_test.wav"
     }
-  </style>
-</head>
-<body>
-  <h1>GPS試験</h1>
-  <a href="index.html">設定ページに戻る</a>
-  <p id="coords">緯度・経度：取得中...</p>
-  <div id="audio-list"></div>
-  <div id="play-queue">
-    <h2>この先</h2>
-    <ul id="queue-list"></ul>
-  </div>
-  <div id="sound-effects">
-    <h2 class="spoiler-button" onclick="toggleSpoiler('sound-spoiler')">スポット放送(スポイラー)</h2>
-    <div id="sound-spoiler" class="spoiler-content">
-      <div id="sound-buttons"></div>
-    </div>
-  </div>
-
-  <script>
-    const jsonUrl = 'list_kosa-gps.json';
-    const audioList = document.getElementById('audio-list');
-    const queueList = document.getElementById('queue-list');
-    const soundButtons = document.getElementById('sound-buttons');
-    const coordDisplay = document.getElementById('coords');
-    let currentAudioIndex = 0;
-    let audioElement;
-    let autoPlayFlags = [];
-
-    function toggleSpoiler(spoilerId) {
-      const spoiler = document.getElementById(spoilerId);
-      spoiler.style.display = spoiler.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function getDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3;
-      const toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    fetch(jsonUrl)
-      .then(response => response.json())
-      .then(data => {
-        autoPlayFlags = data.audio_data.map(() => false);
-
-        function playAudio(index) {
-          console.log("playAudio 呼び出し:", index);
-
-          if (index >= 0 && index < data.audio_data.length) {
-            currentAudioIndex = index;
-            if (audioElement) {
-              audioElement.pause();
-            }
-            audioElement = new Audio(data.audio_data[index].audio_url);
-            console.log("再生準備:", data.audio_data[index].title);
-
-            audioElement.addEventListener('ended', () => {
-              playAudio(index + 1);
-            });
-
-            // 再生を試みる
-            audioElement.play().then(() => {
-              console.log("再生開始:", data.audio_data[index].audio_url);
-            }).catch(err => {
-              console.warn("自動再生失敗:", err);
-            });
-
-            audioList.innerHTML = '';
-            const audioName = document.createElement('p');
-            audioName.textContent = `次は: ${data.audio_data[index].title}`;
-            audioList.appendChild(audioName);
-
-            const playButton = document.createElement('button');
-            playButton.textContent = '<<　起　動　>>';
-            playButton.addEventListener('click', () => {
-              audioElement.play();
-            });
-
-            const prevButton = document.createElement('button');
-            prevButton.textContent = '戻し';
-            prevButton.addEventListener('click', () => {
-              playAudio(index - 1);
-            });
-
-            const nextButton = document.createElement('button');
-            nextButton.textContent = '通過';
-            nextButton.addEventListener('click', () => {
-              playAudio(index + 1);
-            });
-
-            const pauseButton = document.createElement('button');
-            pauseButton.textContent = '一時停止';
-            pauseButton.addEventListener('click', () => {
-              audioElement.pause();
-            });
-
-            audioList.appendChild(playButton);
-            audioList.appendChild(prevButton);
-            audioList.appendChild(pauseButton);
-            audioList.appendChild(nextButton);
-
-            queueList.innerHTML = '';
-            for (let i = index + 1; i < data.audio_data.length; i++) {
-              const queueItem = document.createElement('li');
-              queueItem.textContent = data.audio_data[i].title;
-              queueList.appendChild(queueItem);
-            }
-          }
-        }
-
-        playAudio(currentAudioIndex);
-
-        data.soundEffects.forEach(effect => {
-          if (effect.label && effect.audio_url) {
-            const effectButton = document.createElement('button');
-            effectButton.textContent = effect.label;
-            effectButton.addEventListener('click', () => {
-              const soundEffect = new Audio(effect.audio_url);
-              soundEffect.play();
-            });
-            soundButtons.appendChild(effectButton);
-          }
-        });
-
-        navigator.geolocation.watchPosition(pos => {
-          const currentLat = pos.coords.latitude;
-          const currentLon = pos.coords.longitude;
-          coordDisplay.textContent = `緯度・経度：${currentLat.toFixed(6)}, ${currentLon.toFixed(6)}`;
-
-          data.audio_data.forEach((point, index) => {
-            if (!autoPlayFlags[index] && point.lat && point.lon) {
-              const distance = getDistance(currentLat, currentLon, point.lat, point.lon);
-              if (distance < 100) {
-                console.log(`範囲内: ${point.title} (距離: ${Math.round(distance)}m)`);
-                autoPlayFlags[index] = true;
-                playAudio(index);
-              }
-            }
-          });
-        }, err => {
-          console.error("位置情報の取得に失敗しました:", err);
-        }, {
-          enableHighAccuracy: true,
-          maximumAge: 10000,
-          timeout: 10000
-        });
-
-        // 位置情報が拒否されたなど
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            console.log("現在地取得:", position.coords.latitude, position.coords.longitude);
-          },
-          error => {
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                alert("位置情報の取得が拒否されました。ブラウザの設定をご確認ください。");
-                break;
-              case error.POSITION_UNAVAILABLE:
-                alert("位置情報が利用できません。ネットワーク状況などをご確認ください。");
-                break;
-              case error.TIMEOUT:
-                alert("位置情報の取得がタイムアウトしました。もう一度お試しください。");
-                break;
-              default:
-                alert("位置情報の取得中に不明なエラーが発生しました。");
-                break;
-            }
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-          }
-        );
-      })
-      .catch(error => console.error('JSON ファイルの読み込み中にエラーが発生しました', error));
-  </script>
-</body>
-</html>
+  ]
+}
