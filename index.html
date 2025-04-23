@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>車内放送</title>
+<style>
+    .spoiler-button {
+        cursor: pointer;
+        color: blue;
+        text-decoration: underline;
+    }
+    .spoiler-content {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<h1>GPS試験</h1>
+<a href="index.html">設定ページに戻る</a>
+<div id="audio-list"></div>
+<div id="play-queue">
+    <h2>この先</h2>
+    <ul id="queue-list"></ul>
+</div>
+<div id="sound-effects">
+    <h2 class="spoiler-button" onclick="toggleSpoiler('sound-spoiler')">スポット放送(スポイラー)</h2>
+    <div id="sound-spoiler" class="spoiler-content">
+        <div id="sound-buttons"></div>
+    </div>
+</div>
+
+<script>
+const jsonUrl = 'list_kosa-gps.json';
+const audioList = document.getElementById('audio-list');
+const queueList = document.getElementById('queue-list');
+const soundButtons = document.getElementById('sound-buttons');
+let currentAudioIndex = 0;
+let audioElement;
+let autoPlayFlags = [];
+
+function toggleSpoiler(spoilerId) {
+    const spoiler = document.getElementById(spoilerId);
+    spoiler.style.display = spoiler.style.display === 'none' ? 'block' : 'none';
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const toRad = deg => deg * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+fetch(jsonUrl)
+    .then(response => response.json())
+    .then(data => {
+        autoPlayFlags = data.audio_data.map(() => false);
+
+        function playAudio(index) {
+            if (index >= 0 && index < data.audio_data.length) {
+                currentAudioIndex = index;
+                if (audioElement) {
+                    audioElement.pause();
+                }
+                audioElement = new Audio(data.audio_data[index].audio_url);
+                audioElement.addEventListener('ended', () => {
+                    playAudio(index + 1);
+                });
+
+                audioList.innerHTML = '';
+                const audioName = document.createElement('p');
+                audioName.textContent = `次は: ${data.audio_data[index].title}`;
+                audioList.appendChild(audioName);
+
+                const playButton = document.createElement('button');
+                playButton.textContent = '<<　起　動　>>';
+                playButton.addEventListener('click', () => {
+                    audioElement.play();
+                });
+
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '戻し';
+                prevButton.addEventListener('click', () => {
+                    playAudio(index - 1);
+                });
+
+                const nextButton = document.createElement('button');
+                nextButton.textContent = '通過';
+                nextButton.addEventListener('click', () => {
+                    playAudio(index + 1);
+                });
+
+                const pauseButton = document.createElement('button');
+                pauseButton.textContent = '一時停止';
+                pauseButton.addEventListener('click', () => {
+                    audioElement.pause();
+                });
+
+                audioList.appendChild(playButton);
+                audioList.appendChild(prevButton);
+                audioList.appendChild(pauseButton);
+                audioList.appendChild(nextButton);
+
+                queueList.innerHTML = '';
+                for (let i = index + 1; i < data.audio_data.length; i++) {
+                    const queueItem = document.createElement('li');
+                    queueItem.textContent = data.audio_data[i].title;
+                    queueList.appendChild(queueItem);
+                }
+            }
+        }
+
+        playAudio(currentAudioIndex);
+
+        data.soundEffects.forEach(effect => {
+            if (effect.label && effect.audio_url) {
+                const effectButton = document.createElement('button');
+                effectButton.textContent = effect.label;
+                effectButton.addEventListener('click', () => {
+                    const soundEffect = new Audio(effect.audio_url);
+                    soundEffect.play();
+                });
+                soundButtons.appendChild(effectButton);
+            }
+        });
+
+        navigator.geolocation.watchPosition(pos => {
+            const currentLat = pos.coords.latitude;
+            const currentLon = pos.coords.longitude;
+
+            data.audio_data.forEach((point, index) => {
+                if (!autoPlayFlags[index] && point.lat && point.lon) {
+                    const distance = getDistance(currentLat, currentLon, point.lat, point.lon);
+                    if (distance < 100) {
+                        autoPlayFlags[index] = true;
+                        playAudio(index);
+                    }
+                }
+            });
+        }, err => {
+            console.error("位置情報の取得に失敗しました:", err);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 10000,
+            timeout: 10000
+        });
+    })
+    .catch(error => console.error('JSON ファイルの読み込み中にエラーが発生しました', error));
+</script>
+</body>
+</html>
