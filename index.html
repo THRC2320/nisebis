@@ -39,6 +39,7 @@
     let currentAudioIndex = 0;
     let audioElement;
     let autoPlayFlags = [];
+    let data;
 
     function toggleSpoiler(spoilerId) {
       const spoiler = document.getElementById(spoilerId);
@@ -54,75 +55,77 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    function showAudioInfo(index) {
+      if (index < 0 || index >= data.audio_data.length) return;
+
+      currentAudioIndex = index;
+      const item = data.audio_data[index];
+
+      audioList.innerHTML = '';
+      const audioName = document.createElement('p');
+      audioName.textContent = `次は: ${item.title}`;
+      audioList.appendChild(audioName);
+
+      const playButton = document.createElement('button');
+      playButton.textContent = '<<　起　動　>>';
+      playButton.addEventListener('click', () => {
+        if (audioElement) audioElement.pause();
+        audioElement = new Audio(item.audio_url);
+        audioElement.play();
+      });
+
+      const prevButton = document.createElement('button');
+      prevButton.textContent = '戻し';
+      prevButton.addEventListener('click', () => {
+        playAudio(index - 1);
+      });
+
+      const nextButton = document.createElement('button');
+      nextButton.textContent = '通過';
+      nextButton.addEventListener('click', () => {
+        showAudioInfo(index + 1); // 再生せず次へ
+      });
+
+      const pauseButton = document.createElement('button');
+      pauseButton.textContent = '一時停止';
+      pauseButton.addEventListener('click', () => {
+        if (audioElement) audioElement.pause();
+      });
+
+      audioList.appendChild(playButton);
+      audioList.appendChild(prevButton);
+      audioList.appendChild(pauseButton);
+      audioList.appendChild(nextButton);
+
+      queueList.innerHTML = '';
+      for (let i = index + 1; i < data.audio_data.length; i++) {
+        const queueItem = document.createElement('li');
+        queueItem.textContent = data.audio_data[i].title;
+        queueList.appendChild(queueItem);
+      }
+    }
+
+    function playAudio(index) {
+      if (index < 0 || index >= data.audio_data.length) return;
+
+      currentAudioIndex = index;
+      const item = data.audio_data[index];
+      showAudioInfo(index); // UI更新
+
+      if (audioElement) audioElement.pause();
+      audioElement = new Audio(item.audio_url);
+      audioElement.play().catch(err => {
+        console.warn("自動再生失敗:", err);
+      });
+    }
+
     fetch(jsonUrl)
       .then(response => response.json())
-      .then(data => {
+      .then(json => {
+        data = json;
         autoPlayFlags = data.audio_data.map(() => false);
 
-        function showAudioInfo(index) {
-          currentAudioIndex = index;
-          if (audioElement) {
-            audioElement.pause();
-          }
-
-          const item = data.audio_data[index];
-          audioList.innerHTML = '';
-          const audioName = document.createElement('p');
-          audioName.textContent = `次は: ${item.title}`;
-          audioList.appendChild(audioName);
-
-          const playButton = document.createElement('button');
-          playButton.textContent = '<<　起　動　>>';
-          playButton.addEventListener('click', () => {
-            audioElement = new Audio(item.audio_url);
-            audioElement.play().catch(err => console.warn("再生失敗:", err));
-          });
-
-          const prevButton = document.createElement('button');
-          prevButton.textContent = '戻し';
-          prevButton.addEventListener('click', () => {
-            if (index > 0) showAudioInfo(index - 1);
-          });
-
-          const nextButton = document.createElement('button');
-          nextButton.textContent = '通過';
-          nextButton.addEventListener('click', () => {
-            if (index + 1 < data.audio_data.length) {
-              showAudioInfo(index + 1);
-            }
-          });
-
-          const pauseButton = document.createElement('button');
-          pauseButton.textContent = '一時停止';
-          pauseButton.addEventListener('click', () => {
-            if (audioElement) audioElement.pause();
-          });
-
-          audioList.appendChild(playButton);
-          audioList.appendChild(prevButton);
-          audioList.appendChild(pauseButton);
-          audioList.appendChild(nextButton);
-
-          queueList.innerHTML = '';
-          for (let i = index + 1; i < data.audio_data.length; i++) {
-            const queueItem = document.createElement('li');
-            queueItem.textContent = data.audio_data[i].title;
-            queueList.appendChild(queueItem);
-          }
-        }
-
-        function playAudio(index) {
-          currentAudioIndex = index;
-          const item = data.audio_data[index];
-          if (audioElement) {
-            audioElement.pause();
-          }
-          audioElement = new Audio(item.audio_url);
-          audioElement.play().catch(err => console.warn("自動再生失敗:", err));
-          showAudioInfo(index); // UI更新だけ
-        }
-
-        showAudioInfo(currentAudioIndex);
+        playAudio(currentAudioIndex);
 
         data.soundEffects.forEach(effect => {
           if (effect.label && effect.audio_url) {
@@ -145,6 +148,7 @@
             if (!autoPlayFlags[index] && point.lat && point.lon) {
               const distance = getDistance(currentLat, currentLon, point.lat, point.lon);
               if (distance < 100) {
+                console.log(`範囲内: ${point.title} (距離: ${Math.round(distance)}m)`);
                 autoPlayFlags[index] = true;
                 playAudio(index);
               }
