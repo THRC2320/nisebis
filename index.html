@@ -17,11 +17,23 @@
 <body>
 <h1>GPS試験</h1>
 <a href="index.html">設定ページに戻る</a>
+
+<!-- 現在位置表示 -->
+<div id="gps-info">
+  <h2>現在位置</h2>
+  <p id="coords">取得中...</p>
+</div>
+
+<!-- 音声リスト -->
 <div id="audio-list"></div>
+
+<!-- 再生キュー -->
 <div id="play-queue">
     <h2>この先</h2>
     <ul id="queue-list"></ul>
 </div>
+
+<!-- 効果音 -->
 <div id="sound-effects">
     <h2 class="spoiler-button" onclick="toggleSpoiler('sound-spoiler')">スポット放送(スポイラー)</h2>
     <div id="sound-spoiler" class="spoiler-content">
@@ -34,6 +46,8 @@ const jsonUrl = 'list_kosa-gps.json';
 const audioList = document.getElementById('audio-list');
 const queueList = document.getElementById('queue-list');
 const soundButtons = document.getElementById('sound-buttons');
+const coordsDisplay = document.getElementById('coords');
+
 let currentAudioIndex = 0;
 let audioElement;
 let autoPlayFlags = [];
@@ -50,6 +64,27 @@ function getDistance(lat1, lon1, lat2, lon2) {
     const dLon = toRad(lon2 - lon1);
     const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function updateCoordsDisplay(lat, lon) {
+    coordsDisplay.textContent = `緯度: ${lat.toFixed(6)}　経度: ${lon.toFixed(6)}`;
+}
+
+function handleGeoError(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            alert("位置情報の取得が拒否されました。ブラウザの設定をご確認ください。");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("位置情報が利用できません。ネットワーク状況などをご確認ください。");
+            break;
+        case error.TIMEOUT:
+            alert("位置情報の取得がタイムアウトしました。もう一度お試しください。");
+            break;
+        default:
+            alert("位置情報の取得中に不明なエラーが発生しました。");
+            break;
+    }
 }
 
 fetch(jsonUrl)
@@ -129,6 +164,8 @@ fetch(jsonUrl)
             const currentLat = pos.coords.latitude;
             const currentLon = pos.coords.longitude;
 
+            updateCoordsDisplay(currentLat, currentLon);
+
             data.audio_data.forEach((point, index) => {
                 if (!autoPlayFlags[index] && point.lat && point.lon) {
                     const distance = getDistance(currentLat, currentLon, point.lat, point.lon);
@@ -138,44 +175,17 @@ fetch(jsonUrl)
                     }
                 }
             });
-        }, err => {
-            console.error("位置情報の取得に失敗しました:", err);
-        }, {
+        }, handleGeoError, {
             enableHighAccuracy: true,
             maximumAge: 10000,
             timeout: 10000
         });
-navigator.geolocation.getCurrentPosition(
-  position => {
-    // 成功時の処理（例：位置情報取得して何かする）
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
-    console.log("位置取得成功", lat, lon);
-  },
-  error => {
-    // 失敗時の処理
-    switch (error.code) {
-      case error.PERMISSION_DENIED:
-        alert("位置情報の取得が拒否されました。ブラウザの設定をご確認ください。");
-        break;
-      case error.POSITION_UNAVAILABLE:
-        alert("位置情報が利用できません。ネットワーク状況などをご確認ください。");
-        break;
-      case error.TIMEOUT:
-        alert("位置情報の取得がタイムアウトしました。もう一度お試しください。");
-        break;
-      default:
-        alert("位置情報の取得中に不明なエラーが発生しました。");
-        break;
-    }
-  },
-  {
-    enableHighAccuracy: true, // 高精度（可能なら）
-    timeout: 10000,           // 10秒でタイムアウト
-    maximumAge: 0             // キャッシュ使わない
-  }
-);
 
+        navigator.geolocation.getCurrentPosition(
+            pos => updateCoordsDisplay(pos.coords.latitude, pos.coords.longitude),
+            handleGeoError,
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
     })
     .catch(error => console.error('JSON ファイルの読み込み中にエラーが発生しました', error));
 </script>
